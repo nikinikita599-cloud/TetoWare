@@ -1,43 +1,61 @@
 <?php
-// auth.php - Простая авторизация по ключу
+// auth.php - Полная система авторизации
 header('Content-Type: text/plain');
-
-// Разрешаем запросы с любых источников (для отладки)
 header('Access-Control-Allow-Origin: *');
 
-// ===== НАСТРОЙКИ =====
-// Список валидных ключей (можно добавлять сколько угодно)
-$validKeys = [
-    "TEST-KEY-123",
-    "PREMIUM-2024",
-    "FREE-TRIAL",
-    "YOUR-KEY-HERE"
-];
+$mode = isset($_GET['mode']) ? $_GET['mode'] : 'auth';
+$pass = isset($_GET['pass']) ? $_GET['pass'] : '';
 
-// Дополнительная защита: можно проверять по времени
-$enableTimeCheck = false; // true = включить проверку по времени
-$validUntil = "2025-01-01"; // Дата, до которой ключи работают
-// ====================
+// Пароль для админки (смени на свой)
+$adminPass = "admin123";
 
-// Получаем ключ из запроса
-$key = isset($_GET['key']) ? trim($_GET['key']) : '';
-
-// Если ключ пустой
-if (empty($key)) {
-    die("0");
+switch ($mode) {
+    case 'auth':
+        handleAuth();
+        break;
+    case 'generate':
+        if ($pass !== $adminPass) die("Access denied");
+        handleGenerate();
+        break;
+    case 'list':
+        if ($pass !== $adminPass) die("Access denied");
+        handleList();
+        break;
+    default:
+        die("Invalid mode");
 }
 
-// Проверяем, есть ли ключ в списке
-if (in_array($key, $validKeys)) {
-    // Если включена проверка времени
-    if ($enableTimeCheck) {
-        $currentDate = date('Y-m-d');
-        if ($currentDate > $validUntil) {
-            die("0"); // Срок действия истек
-        }
+function handleAuth() {
+    $key = isset($_GET['key']) ? trim($_GET['key']) : '';
+    if (empty($key)) die("0");
+    
+    // Простой список ключей
+    $validKeys = [
+        "TEST-KEY-123",
+        "PREMIUM-2025",
+        "FREE-TRIAL"
+    ];
+    
+    echo in_array($key, $validKeys) ? "1" : "0";
+}
+
+function handleGenerate() {
+    // Генерация случайного ключа
+    $chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $key = '';
+    for ($i = 0; $i < 16; $i++) {
+        $key .= $chars[rand(0, strlen($chars)-1)];
     }
-    die("1"); // Успех
-} else {
-    die("0"); // Неудача
+    
+    // Здесь можно сохранить в базу, но пока просто выдаем
+    echo "KEY: $key\n";
+    echo "Этот ключ нужно добавить в список validKeys вручную";
+}
+
+function handleList() {
+    echo "Список активных ключей:\n";
+    echo "- TEST-KEY-123\n";
+    echo "- PREMIUM-2025\n";
+    echo "- FREE-TRIAL\n";
 }
 ?>
